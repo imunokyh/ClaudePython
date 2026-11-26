@@ -4,13 +4,37 @@
 
 ## 프로젝트
 
-ClaudePython — "AI를 이용한 파이썬 코드". 아직 파이썬 소스 코드, 의존성, 빌드·린트·테스트 설정은 없다. 지금 저장소에 있는 것은 README와 Claude Code 설정(`.claude/`)뿐이다.
+ClaudePython — "AI를 이용한 파이썬 코드". 현재 과제는 OEM 요구사항 사양서(OEM-SWR-001, `OEM/`에 있으며 커밋 금지)에 따른 전자식 차일드락 제어 SW의 PC/SIL 참조 구현이다. 단계별 계획과 의사결정은 `docs/development-plan.md`에 있다.
 
+- `src/child_lock/`: 제품 코드 패키지.
+- `tests/`: pytest 테스트. `tests/tools/`는 품질 측정 도구 테스트.
+- `tools/code_metrics.py`: 주석률·함수 길이 측정 도구 (`python -m tools <경로>`).
+- `Jenkinsfile`: CI 파이프라인 (Ruff, pytest 커버리지, 주석률·함수 길이).
 - `.claude/skills/system-test-case-generator/`: 요구사항으로부터 A-SPICE(SWE.6/SYS.5)·ISO 26262-6 기준의 테스트 케이스 엑셀을 만드는 스킬. `scripts/`에 PICT 실행 래퍼와 추적성·커버리지 검증 스크립트가 있다.
 - `.claude/skills/test-driven-development/`: github.com/obra/superpowers의 TDD 스킬(MIT).
 - `.claude/agents/system-test-case-designer.md`: 위 테스트 케이스 스킬을 쓰는 서브 에이전트(Sonnet).
 
-첫 코드를 추가할 때 `pyproject.toml`에 아래 "개발 환경"과 "소스코드 품질" 설정을 넣고, 실제 명령어(단일 테스트 실행 방법 포함)를 이 파일에 적는다. 코드가 여러 모듈로 나뉘면 구조 설명도 짧게 추가한다.
+코드가 여러 모듈로 나뉘면 구조 설명을 이 파일에 짧게 추가한다.
+
+## 명령어
+
+가상환경은 저장소 루트의 `.venv`를 쓴다. 처음 한 번 설정한다.
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
+```
+
+| 작업 | 명령 |
+|---|---|
+| 전체 테스트 + Branch 커버리지 100% 확인 | `.\.venv\Scripts\python.exe -m pytest --cov --cov-branch --cov-fail-under=100` |
+| 테스트 파일 하나 | `.\.venv\Scripts\python.exe -m pytest tests/tools/test_code_metrics.py` |
+| 테스트 함수 하나 | `.\.venv\Scripts\python.exe -m pytest tests/tools/test_code_metrics.py::test_main_reports_low_comment_ratio_per_file` |
+| 린트 | `.\.venv\Scripts\python.exe -m ruff check .` |
+| 포맷 검사 / 적용 | `.\.venv\Scripts\python.exe -m ruff format --check .` / `... ruff format .` |
+| 주석률·함수 길이 | `.\.venv\Scripts\python.exe -m tools src tools` |
+
+PR을 올리기 전에 위 검사를 모두 통과시킨다. Ruff는 `.claude/`(스킬 스크립트)를 검사하지 않는다.
 
 ## 개발 환경
 
@@ -65,7 +89,7 @@ ClaudePython — "AI를 이용한 파이썬 코드". 아직 파이썬 소스 코
       """
   ```
 
-- 함수 길이와 주석률은 Ruff로 측정할 수 없다. 측정 스크립트를 추가하면 그 실행 명령을 이 표에 적는다.
+- 함수 길이와 주석률은 Ruff로 측정할 수 없어 `tools/code_metrics.py`로 측정한다. 대상은 `src`와 `tools`이며, 테스트 코드(`tests/`)는 주석률·함수 길이 측정 대상에서 뺀다.
 
 ## Git 브랜치 규칙
 
