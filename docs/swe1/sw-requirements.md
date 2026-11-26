@@ -3,13 +3,14 @@
 | 항목 | 내용 |
 |---|---|
 | 문서 ID | SWE1-SRS |
-| 개정 | 1.1 |
+| 개정 | 1.2 |
 
 | 개정 | 날짜 | 내용 |
 |---|---|---|
 | 1.0 | 2026-11-26 | 최초 베이스라인 (독립 검토 SWE1-REV RV-01~43 반영) |
 | 1.1 | 2026-11-26 | SWE.2 아키텍처 검토(SWE2-REV)에서 드러난 결함·모호함 정정: SWR-013 기준 스냅샷 정의(AR-02), SWR-006 첫 억제 조건·입력 이상 중 명령 처리·시각 기준(AR-06, AR-07, AR-17), SWR-007 래치 해제는 새 스냅샷에서만(AR-16), SWR-008 PENDING 타이머 기준(AR-15), SWR-022 평가 시각 단조 증가·오류 시 처리·복귀, 한 주기 다중 스냅샷 규칙(AR-01, AR-24~26), 1.2절 충돌 판정 예외(AR-27), A-24·A-25 추가 |
-| 베이스라인 | BL-SWR-1.1 (G1 제출 대상, 1.0 대체) |
+| 1.2 | 2026-11-26 | SWE.3 상세 설계 검토(SWE3-REV DD-17): SWR-007 충돌 판정에 타임스탬프 역행 검사 미적용 명시. 1.4절 순위 7의 `priority_reason` 명시 |
+| 베이스라인 | BL-SWR-1.2 (G1 제출 대상, 1.1 대체) |
 | 상위 입력 | OEM-SWR-001 Rev 1.0 (BL-OEM-1.0) |
 | A-SPICE | SWE.1 Software Requirements Analysis |
 
@@ -78,7 +79,7 @@
 | 4 | 접근위험 / override (쪽별) | `LOCK` / override면 `RELEASE` | `APPROACH_RISK` / `DRIVER_OVERRIDE` (`approach_risk` / `driver_override`) | ASIL B | SWR-005, 006, 009 |
 | 5 | QM 신호 오류 | 순위 1~4가 정하지 않은 쪽 직전 유지 | `INPUT_INVALID` (`input_invalid`) | QM | SWR-013 |
 | 6 | 시동 OFF | `RELEASE` | `IGNITION_OFF` (`ignition_off`) | QM | SWR-020 |
-| 7 | 화재 / 과온 / 성인 탑승 | `RELEASE` | `FIRE` / `OVERTEMPERATURE` / `ADULT_PRESENT` | QM | SWR-017 |
+| 7 | 화재 / 과온 / 성인 탑승 | `RELEASE` | `FIRE` / `OVERTEMPERATURE` / `ADULT_PRESENT` (`fire_detected` / `overtemperature_detected` / `adult_present`) | QM | SWR-017 |
 | 8 | ISOFIX (쪽별) | `LOCK` | `ISOFIX` (`isofix`) | QM | SWR-018 |
 | 9 | 자동 잠금 | `LOCK` | `AUTO_LOCK` (`auto_lock`) | QM | SWR-003 |
 | 10 | 운전자 명령 (쪽별) | 명령대로 | `DRIVER_COMMAND` (`driver_command`) | QM | SWR-001, 002, 004 |
@@ -121,7 +122,7 @@
 
 | ID | ASIL | 요구사항 | 수용기준 | 검증 |
 |---|---|---|---|---|
-| SWR-007 | B | SW는 형식이 유효하고 나이(평가 시각 − `source_timestamp_s`)가 1.0초 이하인 스냅샷에서 `crash_status=CONFIRMED`를 받으면 충돌 래치를 세워야 한다. 래치가 서 있는 동안에는 다른 모든 규칙보다 우선해 좌·우 출력을 `RELEASE`한다. 이 판정은 `crash_status`와 `source_timestamp_s`만 유효하면 수행하고, 다른 신호의 오류나 0.200초 초과 지연과는 무관하다. 래치는 그 주기에 새로 받은 스냅샷에서 `crash_status`, `ignition_on`, `source_timestamp_s`가 유효하고 `ignition_on=false`, `crash_status`가 `CONFIRMED`가 아닐 때만 해제한다. 스냅샷 없는 주기에 직전 값을 다시 써서 해제하지 않는다. `가정` A-03, A-14 | 나이 0.200초 이하인 `CONFIRMED` 스냅샷에 대해: 출력 `RELEASE` 평가 시각 − 그 스냅샷의 `source_timestamp_s` ≤ 0.300초. 이후 `NONE`이 와도, 접근위험·ISOFIX·자동잠금·운전자 `lock`·sensor fault·다른 신호 오류가 있어도 `RELEASE`가 유지된다. 나이 1.05초인 `CONFIRMED`로는 래치가 서지 않는다. 시동 OFF 스냅샷 뒤 다시 시동 ON이 되면 래치가 풀려 있다. | UT, ST |
+| SWR-007 | B | SW는 형식이 유효하고 나이(평가 시각 − `source_timestamp_s`)가 1.0초 이하인 스냅샷에서 `crash_status=CONFIRMED`를 받으면 충돌 래치를 세워야 한다. 래치가 서 있는 동안에는 다른 모든 규칙보다 우선해 좌·우 출력을 `RELEASE`한다. 이 판정은 `crash_status`와 `source_timestamp_s`만 유효하면 수행하고, 다른 신호의 오류나 0.200초 초과 지연과는 무관하다. 충돌 판정의 타임스탬프 유효성에는 역행 검사(SWR-013)를 적용하지 않는다. 늦게 도착한 `CONFIRMED`도 나이가 1.0초 이하이면 처리한다. 래치는 그 주기에 새로 받은 스냅샷에서 `crash_status`, `ignition_on`, `source_timestamp_s`가 유효하고 `ignition_on=false`, `crash_status`가 `CONFIRMED`가 아닐 때만 해제한다. 스냅샷 없는 주기에 직전 값을 다시 써서 해제하지 않는다. `가정` A-03, A-14 | 나이 0.200초 이하인 `CONFIRMED` 스냅샷에 대해: 출력 `RELEASE` 평가 시각 − 그 스냅샷의 `source_timestamp_s` ≤ 0.300초. 이후 `NONE`이 와도, 접근위험·ISOFIX·자동잠금·운전자 `lock`·sensor fault·다른 신호 오류가 있어도 `RELEASE`가 유지된다. 나이 1.05초인 `CONFIRMED`로는 래치가 서지 않는다. 시동 OFF 스냅샷 뒤 다시 시동 ON이 되면 래치가 풀려 있다. | UT, ST |
 | SWR-008 | B | SW는 `crash_status=PENDING`인 동안 순위 8~10(ISOFIX, 자동 잠금, 운전자 `lock`)에 의한 `RELEASE`→`LOCK` 전환을 막아야 한다. 막은 쪽의 이유는 `CRASH_PENDING`이다. 순위 1~7의 결과와 `RELEASE` 방향 결과는 막지 않는다. `PENDING`이 2.0초를 넘게 이어지면 그 뒤로는 막지 않는다. 2.0초는 평가 시각으로, 유효한 `crash_status=PENDING`을 처음 받은 평가부터 잰다. 유효한 `NONE`/`CONFIRMED`를 받으면 타이머를 지운다. 스냅샷 없는 주기와 다른 신호 오류는 타이머에 영향을 주지 않는다. `가정` A-04, A-23 | `PENDING` 중 3.0 km/h, ISOFIX `true`, 운전자 `lock`이 와도 `RELEASE`가 유지되고 `reason_<side>=CRASH_PENDING`. `PENDING` 중 접근위험 `true`이면 그 쪽은 `LOCK`. `PENDING` 중 화재 `true`이면 `RELEASE`. `PENDING`이 시작된 지 2.0초 이하에서는 막고, 2.05초에서는 자동 잠금이 적용된다. `PENDING`→`NONE`이면 막힘이 풀린다. | UT, ST |
 
 ### 2.6 입력 유효성과 고장 (OEM-SR-003, OEM-SR-004)
