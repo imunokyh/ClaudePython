@@ -50,7 +50,7 @@ OEM 인터페이스 9건이 모두 SWR로 추적된다 (9/9).
 | SWR-003 | QM | OEM-FR-002 | A-05 |
 | SWR-004 | QM | OEM-FR-001 | A-05 |
 | SWR-005 | B | OEM-SR-002 | — |
-| SWR-006 | B | OEM-SR-002, OEM-FR-003 | A-02, A-06, A-13, A-20 |
+| SWR-006 | B | OEM-SR-002, OEM-FR-003 | A-02, A-06, A-13, A-20, A-24 |
 | SWR-007 | B | OEM-SR-001 | A-03, A-14 |
 | SWR-008 | B | OEM-SR-001 | A-04, A-23 |
 | SWR-009 | B | OEM-SR-002 | — |
@@ -66,7 +66,7 @@ OEM 인터페이스 9건이 모두 SWR로 추적된다 (9/9).
 | SWR-019 | B | OEM-SR-001~004, OEM-FR-001~003, OEM-FR-005~007 | A-08 |
 | SWR-020 | QM | OEM-FR-007 | A-08 |
 | SWR-021 | B | OEM-SR-004 | A-16 |
-| SWR-022 | B | OEM-SR-003, OEM-NFR-001 | A-01, A-02 |
+| SWR-022 | B | OEM-SR-003, OEM-NFR-001 | A-01, A-02, A-25 |
 
 SWR 22건이 모두 상위 OEM 요구사항을 가진다 (22/22).
 

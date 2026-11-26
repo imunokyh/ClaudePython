@@ -3,8 +3,13 @@
 | 항목 | 내용 |
 |---|---|
 | 문서 ID | SWE1-SRS |
-| 개정 | 1.0 (독립 검토 SWE1-REV RV-01~40 반영) |
-| 베이스라인 | BL-SWR-1.0 (G1 제출 대상) |
+| 개정 | 1.1 |
+
+| 개정 | 날짜 | 내용 |
+|---|---|---|
+| 1.0 | 2026-11-26 | 최초 베이스라인 (독립 검토 SWE1-REV RV-01~43 반영) |
+| 1.1 | 2026-11-26 | SWE.2 아키텍처 검토(SWE2-REV)에서 드러난 결함·모호함 정정: SWR-013 기준 스냅샷 정의(AR-02), SWR-006 첫 억제 조건·입력 이상 중 명령 처리·시각 기준(AR-06, AR-07, AR-17), SWR-007 래치 해제는 새 스냅샷에서만(AR-16), SWR-008 PENDING 타이머 기준(AR-15), SWR-022 평가 시각 단조 증가·오류 시 처리·복귀, 한 주기 다중 스냅샷 규칙(AR-01, AR-24~26), 1.2절 충돌 판정 예외(AR-27), A-24·A-25 추가 |
+| 베이스라인 | BL-SWR-1.1 (G1 제출 대상, 1.0 대체) |
 | 상위 입력 | OEM-SWR-001 Rev 1.0 (BL-OEM-1.0) |
 | A-SPICE | SWE.1 Software Requirements Analysis |
 
@@ -35,8 +40,8 @@
 
 - **신호 등급**: ASIL B 규칙(충돌, 입력 감시, sensor fault, 접근위험·override, 래치 해제)이 쓰는 신호는 ASIL B 신호다. 그 밖은 QM 신호다. `가정` A-21
 - **불리언**: `true`/`false`만 허용한다. 0/1, 문자열은 형식 오류다. `가정` A-12
-- **스냅샷**: 차량 신호는 스냅샷 하나에 `source_timestamp_s` 하나와 함께 온다. 스냅샷이 없는 주기에는 직전 유효 스냅샷의 값을 그대로 쓴다. `가정` A-02
-- **운전자 명령 시각**: 그 평가에서 쓰는 스냅샷(새 스냅샷 또는 직전 유효 스냅샷)의 `source_timestamp_s`다(OEM-IF-004). `가정` A-02
+- **스냅샷**: 차량 신호는 스냅샷 하나에 `source_timestamp_s` 하나와 함께 온다. 스냅샷이 없거나 ASIL B 신호 오류가 있는 주기에는 기준 스냅샷(SWR-013)의 값을 쓴다. 예외로 충돌 판정(SWR-007, 008)은 현재 수신 스냅샷의 `crash_status`·`source_timestamp_s`를 쓴다. `가정` A-02
+- **운전자 명령 시각**: 그 평가에서 쓰는 스냅샷(새 스냅샷 또는 기준 스냅샷)의 `source_timestamp_s`다(OEM-IF-004). `가정` A-02
 - **`gear`**: 형식만 검사하고 판단에는 쓰지 않는다. `가정` A-11
 
 ### 1.3 출력
@@ -88,7 +93,7 @@
 
 | ID | ASIL | 요구사항 | 수용기준 | 검증 |
 |---|---|---|---|---|
-| SWR-022 | B | SW는 50 ms 주기마다 평가를 한 번 수행해야 한다. 새 스냅샷이 없는 주기에도 평가한다. 평가 시각은 외부에서 주입한다. 한 평가의 입력은 그 주기에 받은 스냅샷 0~1개와 운전자 명령 0개 이상이다. `가정` A-01 | 스냅샷 없이 평가해도 결과가 나오고, 직전 유효 스냅샷 값으로 판정한다. 주입한 시각이 시간 판정(SWR-006, 007, 008, 013)에 그대로 쓰인다. | UT, IT |
+| SWR-022 | B | SW는 50 ms 주기마다 평가를 한 번 수행해야 한다. 새 스냅샷이 없는 주기에도 평가한다. 평가 시각은 외부에서 주입하며 직전 정상 평가 시각보다 커야 한다. 그렇지 않으면 그 평가는 ASIL B 입력 오류(순위 2, `INPUT_INVALID`)로 처리하고, 그 평가에서는 충돌 래치·PENDING 타이머·첫 억제·override·기준 스냅샷을 갱신하지 않는다(기존 래치는 유지). 직전 정상 평가 시각은 정상 평가에서만 갱신하므로, 시각이 다시 그 값보다 커지면 정상으로 돌아간다. 앞으로 크게 건너뛴 시각은 오류가 아니다(입력 지연은 SWR-013이 판정). 한 평가의 입력은 그 주기에 받은 스냅샷 0~1개와 운전자 명령 0개 이상이다. 한 주기에 스냅샷이 여러 개 오면 `crash_status`가 `"CONFIRMED"`인 것 중 마지막 것을, 없으면 마지막 것을 쓰고 나머지는 버린다. 명령은 받은 순서대로 모두 쓴다. `가정` A-01, A-25 | 스냅샷 없이 평가해도 결과가 나오고, 기준 스냅샷(SWR-013) 값으로 판정한다. 직전과 같거나 이전인 평가 시각은 `INPUT_INVALID`이고 그 평가에 `CONFIRMED`가 와도 래치가 서지 않는다. 이후 시각이 직전 정상 시각보다 커지면 정상 판정한다. 한 주기에 `CONFIRMED` 스냅샷 뒤 `NONE` 스냅샷이 와도 래치가 선다. 주입한 시각이 시간 판정(SWR-006, 007, 008, 013)에 그대로 쓰인다. | UT, IT |
 
 ### 2.2 운전자 명령 (OEM-FR-001)
 
@@ -109,21 +114,21 @@
 | ID | ASIL | 요구사항 | 수용기준 | 검증 |
 |---|---|---|---|---|
 | SWR-005 | B | SW는 `rear_<side>_approach_risk`가 `true`인 쪽 출력을 `LOCK`으로 해야 한다. 그 쪽 `unlock`은 억제하고 `APPROACH_RISK`로 기록한다. 재입력 override는 SWR-006이 다룬다. | 위험 `true`가 된 평가에 해당 출력 `LOCK`, `reason_<side>=APPROACH_RISK`. 첫 `unlock`에도 `LOCK`이 유지된다. 시동 OFF, 화재·과온·성인, QM 신호 오류, 운전자 `unlock`이 같이 있어도 그 쪽은 `LOCK`이다. | UT, ST |
-| SWR-006 | B | SW는 접근위험으로 `unlock`을 처음 억제한 평가 이후의 평가에서, 첫 억제 시각부터 10.0초 이하에 같은 쪽 `unlock`이 다시 오면 override로 그 쪽을 `RELEASE`해야 한다. `all`은 양쪽 재입력으로 본다. source는 달라도 된다. 같은 평가 안의 중복 `unlock`은 재입력으로 보지 않는다. 10.0초를 넘긴 재입력은 새로운 첫 억제다. override는 `vehicle_speed_kph < 3.0`일 때만 성립한다. override는 다음 중 하나가 일어나면 끝난다: 그 쪽 위험이 `false`가 됨, 차속 3.0 km/h 이상, 시동 OFF, 충돌 래치. `가정` A-06, A-13 | 첫 억제 후 10.0초에 재입력하면 `RELEASE`, `state=OVERRIDE`, `reason_<side>=DRIVER_OVERRIDE`. 10.05초에 재입력하면 다시 억제된다. 한 평가에 `unlock`이 두 번 와도 override가 아니다. 3.0 km/h에서 10초 안에 재입력해도 override가 아니고 `LOCK`이다. override 중 차속이 3.0 km/h가 되면 그 쪽이 `LOCK`이다. | UT, ST |
+| SWR-006 | B | SW는 접근위험으로 `unlock`을 처음 억제한 평가 이후의 평가에서, 첫 억제 시각부터 10.0초 이하에 같은 쪽 `unlock`이 다시 오면 override로 그 쪽을 `RELEASE`해야 한다. `all`은 양쪽 재입력으로 본다. source는 달라도 된다. 같은 평가 안의 중복 `unlock`은 재입력으로 보지 않는다. 10.0초를 넘긴 재입력은 새로운 첫 억제다. override는 `vehicle_speed_kph < 3.0`일 때만 성립한다. override는 다음 중 하나가 일어나면 끝난다: 그 쪽 위험이 `false`가 됨, 차속 3.0 km/h 이상, 시동 OFF, 충돌 래치. 첫 억제는 차속 3.0 km/h 미만에서 억제한 `unlock`만 기록하고, 위 종료 조건이 일어나면 지운다. 순위 1~3이 적용된 평가의 `unlock`은 첫 억제나 재입력으로 세지 않는다. 시각은 명령 시각(1.2절, 쓰는 스냅샷의 `source_timestamp_s`)으로 잰다. `가정` A-06, A-13, A-24 | 첫 억제 후 10.0초에 재입력하면 `RELEASE`, `state=OVERRIDE`, `reason_<side>=DRIVER_OVERRIDE`. 10.05초에 재입력하면 다시 억제된다. 한 평가에 `unlock`이 두 번 와도 override가 아니다. 3.0 km/h에서 10초 안에 재입력해도 override가 아니고 `LOCK`이다. override 중 차속이 3.0 km/h가 되면 그 쪽이 `LOCK`이다. sensor fault 중 받은 `unlock` 뒤, 복귀 후 `unlock` 한 번으로는 override가 되지 않는다. | UT, ST |
 | SWR-009 | B | SW는 SWR-005, SWR-006을 좌·우 독립으로 수행해야 한다. | 좌측만 위험 `true`이면 `lock_right`는 영향받지 않는다. 좌측 override가 우측 억제를 풀지 않는다. 좌 override와 우 ISOFIX가 같은 평가에 있으면 좌 `RELEASE`(`DRIVER_OVERRIDE`), 우 `LOCK`(`ISOFIX`), `reason_code=DRIVER_OVERRIDE`다. | UT, ST |
 
 ### 2.5 충돌 (OEM-SR-001)
 
 | ID | ASIL | 요구사항 | 수용기준 | 검증 |
 |---|---|---|---|---|
-| SWR-007 | B | SW는 형식이 유효하고 나이(평가 시각 − `source_timestamp_s`)가 1.0초 이하인 스냅샷에서 `crash_status=CONFIRMED`를 받으면 충돌 래치를 세워야 한다. 래치가 서 있는 동안에는 다른 모든 규칙보다 우선해 좌·우 출력을 `RELEASE`한다. 이 판정은 `crash_status`와 `source_timestamp_s`만 유효하면 수행하고, 다른 신호의 오류나 0.200초 초과 지연과는 무관하다. 래치는 유효한 스냅샷에서 `ignition_on=false`이고 `crash_status`가 `CONFIRMED`가 아닐 때만 해제한다. `가정` A-03, A-14 | 나이 0.200초 이하인 `CONFIRMED` 스냅샷에 대해: 출력 `RELEASE` 평가 시각 − 그 스냅샷의 `source_timestamp_s` ≤ 0.300초. 이후 `NONE`이 와도, 접근위험·ISOFIX·자동잠금·운전자 `lock`·sensor fault·다른 신호 오류가 있어도 `RELEASE`가 유지된다. 나이 1.05초인 `CONFIRMED`로는 래치가 서지 않는다. 시동 OFF 스냅샷 뒤 다시 시동 ON이 되면 래치가 풀려 있다. | UT, ST |
-| SWR-008 | B | SW는 `crash_status=PENDING`인 동안 순위 8~10(ISOFIX, 자동 잠금, 운전자 `lock`)에 의한 `RELEASE`→`LOCK` 전환을 막아야 한다. 막은 쪽의 이유는 `CRASH_PENDING`이다. 순위 1~7의 결과와 `RELEASE` 방향 결과는 막지 않는다. `PENDING`이 2.0초를 넘게 이어지면 그 뒤로는 막지 않는다. `가정` A-04, A-23 | `PENDING` 중 3.0 km/h, ISOFIX `true`, 운전자 `lock`이 와도 `RELEASE`가 유지되고 `reason_<side>=CRASH_PENDING`. `PENDING` 중 접근위험 `true`이면 그 쪽은 `LOCK`. `PENDING` 중 화재 `true`이면 `RELEASE`. `PENDING`이 시작된 지 2.0초 이하에서는 막고, 2.05초에서는 자동 잠금이 적용된다. `PENDING`→`NONE`이면 막힘이 풀린다. | UT, ST |
+| SWR-007 | B | SW는 형식이 유효하고 나이(평가 시각 − `source_timestamp_s`)가 1.0초 이하인 스냅샷에서 `crash_status=CONFIRMED`를 받으면 충돌 래치를 세워야 한다. 래치가 서 있는 동안에는 다른 모든 규칙보다 우선해 좌·우 출력을 `RELEASE`한다. 이 판정은 `crash_status`와 `source_timestamp_s`만 유효하면 수행하고, 다른 신호의 오류나 0.200초 초과 지연과는 무관하다. 래치는 그 주기에 새로 받은 스냅샷에서 `crash_status`, `ignition_on`, `source_timestamp_s`가 유효하고 `ignition_on=false`, `crash_status`가 `CONFIRMED`가 아닐 때만 해제한다. 스냅샷 없는 주기에 직전 값을 다시 써서 해제하지 않는다. `가정` A-03, A-14 | 나이 0.200초 이하인 `CONFIRMED` 스냅샷에 대해: 출력 `RELEASE` 평가 시각 − 그 스냅샷의 `source_timestamp_s` ≤ 0.300초. 이후 `NONE`이 와도, 접근위험·ISOFIX·자동잠금·운전자 `lock`·sensor fault·다른 신호 오류가 있어도 `RELEASE`가 유지된다. 나이 1.05초인 `CONFIRMED`로는 래치가 서지 않는다. 시동 OFF 스냅샷 뒤 다시 시동 ON이 되면 래치가 풀려 있다. | UT, ST |
+| SWR-008 | B | SW는 `crash_status=PENDING`인 동안 순위 8~10(ISOFIX, 자동 잠금, 운전자 `lock`)에 의한 `RELEASE`→`LOCK` 전환을 막아야 한다. 막은 쪽의 이유는 `CRASH_PENDING`이다. 순위 1~7의 결과와 `RELEASE` 방향 결과는 막지 않는다. `PENDING`이 2.0초를 넘게 이어지면 그 뒤로는 막지 않는다. 2.0초는 평가 시각으로, 유효한 `crash_status=PENDING`을 처음 받은 평가부터 잰다. 유효한 `NONE`/`CONFIRMED`를 받으면 타이머를 지운다. 스냅샷 없는 주기와 다른 신호 오류는 타이머에 영향을 주지 않는다. `가정` A-04, A-23 | `PENDING` 중 3.0 km/h, ISOFIX `true`, 운전자 `lock`이 와도 `RELEASE`가 유지되고 `reason_<side>=CRASH_PENDING`. `PENDING` 중 접근위험 `true`이면 그 쪽은 `LOCK`. `PENDING` 중 화재 `true`이면 `RELEASE`. `PENDING`이 시작된 지 2.0초 이하에서는 막고, 2.05초에서는 자동 잠금이 적용된다. `PENDING`→`NONE`이면 막힘이 풀린다. | UT, ST |
 
 ### 2.6 입력 유효성과 고장 (OEM-SR-003, OEM-SR-004)
 
 | ID | ASIL | 요구사항 | 수용기준 | 검증 |
 |---|---|---|---|---|
-| SWR-013 | B | SW는 평가 전에 스냅샷의 신호마다 누락, 형식, 범위, 미등록 enum을 검사해야 한다. `source_timestamp_s`가 평가 시각보다 0.050초 넘게 미래이거나 직전 유효 스냅샷보다 작으면 형식 오류다. 처리는 오류 난 신호의 등급(1.2절)에 따른다. ① ASIL B 신호 오류이거나, 평가 시각 − 마지막 유효 스냅샷의 `source_timestamp_s` > 0.200초이면 순위 2다. 둘 다 직전 유지, `input_validity=INVALID`/`STALE`. 시작 후 첫 유효 스냅샷 전에도 `STALE`이다. ② QM 신호만 오류이면 순위 5다. 순위 1~4는 그대로 적용하고, 나머지 쪽은 직전 유지, `input_validity=INVALID`. ③ 오류가 있는 스냅샷은 "직전 유효 스냅샷"이 되지 않는다. ④ 다음 유효·최신 스냅샷에서 지연 없이 정상 판정으로 돌아간다. ⑤ 운전자 명령에 오류가 있으면 그 명령만 버린다. ⑥ 순위 1이 적용되는 쪽의 이유는 `CRASH_CONFIRMED`다(SWR-019). `가정` A-07, A-15, A-21, A-22 | 마지막 갱신 후 0.200초 이하에는 정상이다. 0.200초를 넘긴 첫 평가에서 `DEGRADED`이고, 이 평가는 마지막 갱신 후 0.300초 이내다(OEM: 200 ms 초과 후 100 ms 이내). 다음은 각각 `INVALID`다: 300.1 km/h, `crash_status="UNKNOWN"`, 불리언 자리의 `1`, 필드 누락, 0.051초 미래 타임스탬프, 역행 타임스탬프. 0.050초 미래는 정상이다. `isofix_left=1`이면서 좌측 접근위험 `true`이면 좌측 `LOCK`(`APPROACH_RISK`), 우측 직전 유지(`INPUT_INVALID`), `state=DEGRADED`다. | UT, ST |
+| SWR-013 | B | SW는 평가 전에 스냅샷의 신호마다 누락, 형식, 범위, 미등록 enum을 검사해야 한다. `source_timestamp_s`가 평가 시각보다 0.050초 넘게 미래이거나 기준 스냅샷보다 작으면 형식 오류다. 처리는 오류 난 신호의 등급(1.2절)에 따른다. **기준 스냅샷**은 ASIL B 신호(타임스탬프 포함)가 모두 유효한 마지막 스냅샷이다. ① ASIL B 신호 오류이거나, 평가 시각 − 기준 스냅샷의 `source_timestamp_s` > 0.200초이면 순위 2다. 둘 다 직전 유지, `input_validity=INVALID`/`STALE`. 시작 후 첫 기준 스냅샷 전에도 `STALE`이다. ② 쓰는 스냅샷에 QM 신호 오류만 있으면 순위 5다. 순위 1~4는 그대로 적용하고, 나머지 쪽은 직전 유지, `input_validity=INVALID`. ③ ASIL B 신호 오류가 있는 스냅샷은 기준 스냅샷이 되지 않는다. QM 신호 오류만 있는 스냅샷은 기준 스냅샷이 되며, 그 QM 오류는 다음 기준 스냅샷까지 순위 5로 처리한다(SWE2 검토 AR-02). ④ 다음 유효·최신 스냅샷에서 지연 없이 정상 판정으로 돌아간다. ⑤ 운전자 명령에 오류가 있으면 그 명령만 버린다. ⑥ 순위 1이 적용되는 쪽의 이유는 `CRASH_CONFIRMED`다(SWR-019). `가정` A-07, A-15, A-21, A-22 | 마지막 갱신 후 0.200초 이하에는 정상이다. 0.200초를 넘긴 첫 평가에서 `DEGRADED`이고, 이 평가는 마지막 갱신 후 0.300초 이내다(OEM: 200 ms 초과 후 100 ms 이내). 다음은 각각 `INVALID`다: 300.1 km/h, `crash_status="UNKNOWN"`, 불리언 자리의 `1`, 필드 누락, 0.051초 미래 타임스탬프, 역행 타임스탬프. 0.050초 미래는 정상이다. `isofix_left=1`이면서 좌측 접근위험 `true`이면 좌측 `LOCK`(`APPROACH_RISK`), 우측 직전 유지(`INPUT_INVALID`), `state=DEGRADED`다. `gear` 오류만 있는 스냅샷이 0.5초 동안 이어져도 `STALE`이 되지 않고, 그 사이 접근위험 `true`가 오면 그 쪽은 `LOCK`이다. | UT, ST |
 | SWR-021 | B | SW는 유효한 스냅샷의 `sensor_fault`가 `true`이면 새 규칙을 적용하지 않고 직전 출력을 유지해야 한다. 이때 `warning_code=W_SENSOR_FAULT`로 하고, `state`는 1.3절 성립 조건에 따른다(다른 입력 이상이 없으면 `FAULT`). 충돌 래치(순위 1)와 ASIL B 입력 이상(순위 2)만 예외로 우선한다. `sensor_fault`가 `false`가 된 평가부터 정상 판정한다. `가정` A-16 | `sensor_fault=true`인 첫 평가에서 좌·우 출력이 유지되고 `state=FAULT`, `warning_code=W_SENSOR_FAULT`. 같은 평가에 접근위험, 시동 OFF, 운전자 명령, 자동 잠금 조건이 있어도 출력이 바뀌지 않는다. | UT, ST |
 
 ### 2.7 시동 OFF (OEM-FR-007)
@@ -171,7 +176,7 @@
 | ID | 가정 | 관련 SWR | 질의 |
 |---|---|---|---|
 | A-01 | 평가주기 50 ms, 스냅샷이 없어도 주기마다 평가 | SWR-022 | Q-02 |
-| A-02 | 차량 신호는 스냅샷 하나에 타임스탬프 하나. 스냅샷 없는 주기는 직전 유효 스냅샷 값 사용. 명령 시각은 쓰는 스냅샷의 타임스탬프 | SWR-006, 013, 022 | Q-05 |
+| A-02 | 차량 신호는 스냅샷 하나에 타임스탬프 하나. 스냅샷 없는 주기와 ASIL B 신호 오류 주기는 기준 스냅샷 값 사용(충돌 판정은 현재 수신 스냅샷). 명령 시각은 쓰는 스냅샷의 타임스탬프 | SWR-006, 013, 022 | Q-05 |
 | A-03 | 충돌 `CONFIRMED`는 시동 OFF(유효 스냅샷, `CONFIRMED` 아님)까지 래치 | SWR-007 | Q-04 |
 | A-04 | 충돌 `PENDING`은 순위 8~10의 잠금 전환만 막음 | SWR-008 | Q-04 |
 | A-05 | 운전자 `unlock`과 override는 3.0 km/h 미만에서만, 자동 잠금 출력은 차속이 내려가도 유지 | SWR-003, 004 | Q-07 |
@@ -193,12 +198,14 @@
 | A-21 | 신호 등급 분류(1.2절). QM 신호 오류는 ASIL B 규칙을 막지 않음 | SWR-013 | Q-05 |
 | A-22 | 미래 타임스탬프 허용 오차 0.050초 | SWR-013 | Q-05 |
 | A-23 | `PENDING` 필터 최대 지속 2.0초 | SWR-008 | Q-04 |
+| A-24 | 첫 억제는 3.0 km/h 미만에서만 기록, 순위 1~3 평가의 명령은 override 계수에서 제외 | SWR-006 | Q-08 |
+| A-25 | 평가 시각 역행 시 그 평가의 상태 갱신 생략·복귀 규칙, 한 주기 다중 스냅샷은 `CONFIRMED` 우선 후 최신 | SWR-022 | Q-02 |
 
 ## 부록 A. SWR-019 결정표
 
 ### A.1 규칙 쌍 (D-01~D-45)
 
-두 규칙이 같은 평가, 같은 쪽에 해당할 때의 결과다. 두 규칙의 조건 외에는 기본값이다(차속 0.0 km/h, 시동 ON, 모든 신호 유효·최신, 직전 출력은 결과와 반대 값). "직전 유지"는 그 평가 전 출력이 그대로 남는다는 뜻이다. `state`는 1.3절 성립 조건으로 정한다. 대표 조건으로 화재(순위 7)와 `unlock`(순위 10)을 쓴다.
+두 규칙이 같은 평가, 같은 쪽에 해당할 때의 결과다. "ASIL B 입력 이상"(순위 2)에는 평가 시각 오류(SWR-022)도 포함되며 결과는 같다. 두 규칙의 조건 외에는 기본값이다(차속 0.0 km/h, 시동 ON, 모든 신호 유효·최신, 직전 출력은 결과와 반대 값). "직전 유지"는 그 평가 전 출력이 그대로 남는다는 뜻이다. `state`는 1.3절 성립 조건으로 정한다. 대표 조건으로 화재(순위 7)와 `unlock`(순위 10)을 쓴다.
 
 | # | 상위 규칙 (순위) | 하위 규칙 (순위) | 해당 쪽 출력 | reason_code | state |
 |---|---|---|---|---|---|
