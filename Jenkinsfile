@@ -1,41 +1,46 @@
 // 차일드락 제어 SW CI 파이프라인
-// 가정: Linux 에이전트에 python3.12가 설치되어 있다. Windows 에이전트면 sh를 bat으로 바꾼다.
+// 에이전트: Jenkins Built-In 노드 (Windows 11, 172.16.7.117)
+// Python: Jenkins 전역 환경 변수 CHILD_LOCK_PYTHON이 있으면 그 경로를,
+//         없으면 이 PC에 설치된 Python 3.12 경로를 쓴다.
 pipeline {
     agent any
 
     options {
         timestamps()
         timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '30'))
+    }
+
+    environment {
+        PYTHON = "${env.CHILD_LOCK_PYTHON ?: 'C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python312\\python.exe'}"
+        PYTHONUTF8 = '1'
+        VENV_PY = '.venv\\Scripts\\python.exe'
     }
 
     stages {
         stage('환경 준비') {
             steps {
-                sh 'python3.12 -m venv .venv'
-                sh '.venv/bin/python -m pip install --quiet --upgrade pip'
-                sh '.venv/bin/python -m pip install --quiet -e ".[dev]"'
+                bat '"%PYTHON%" --version'
+                bat '"%PYTHON%" -m venv .venv'
+                bat '%VENV_PY% -m pip install --quiet --upgrade pip'
+                bat '%VENV_PY% -m pip install --quiet -e ".[dev]"'
             }
         }
         stage('정적 분석 (Ruff)') {
             steps {
-                sh '.venv/bin/python -m ruff check .'
-                sh '.venv/bin/python -m ruff format --check .'
+                bat '%VENV_PY% -m ruff check .'
+                bat '%VENV_PY% -m ruff format --check .'
             }
         }
         stage('단위 테스트 (Branch 커버리지 100%)') {
             steps {
-                sh '''
-                    mkdir -p reports
-                    .venv/bin/python -m pytest \
-                        --junitxml=reports/junit.xml \
-                        --cov --cov-branch --cov-fail-under=100 \
-                        --cov-report=xml:reports/coverage.xml
-                '''
+                bat 'if not exist reports mkdir reports'
+                bat '%VENV_PY% -m pytest --junitxml=reports/junit.xml --cov --cov-branch --cov-fail-under=100 --cov-report=xml:reports/coverage.xml'
             }
         }
         stage('주석률·함수 길이') {
             steps {
-                sh '.venv/bin/python -m tools src tools'
+                bat '%VENV_PY% -m tools src tools'
             }
         }
     }
