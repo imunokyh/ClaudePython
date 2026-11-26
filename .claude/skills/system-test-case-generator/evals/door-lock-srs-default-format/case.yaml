@@ -1,0 +1,10 @@
+schema_version: "1.1"
+name: door-lock-srs-default-format
+expected_outcome: |
+  An .xlsx test specification in the default format (TC ID, test basis ID, objective, inputs, procedure,
+  expected output, technique, origin) with separate functional and non-functional sheets. All 9 requirements
+  are traced; boundary values around 15 km/h and 5 km/h and the timing limits are tested; GearPos/IgnState/
+  VehSpd/door combinations use PICT; WoW edge cases exist; the vague SWR-DL-103 is raised as a question
+  instead of being covered by an invented pass criterion.
+context:
+  scaffold_script: place-files.sh

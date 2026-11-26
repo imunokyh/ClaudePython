@@ -1,0 +1,20 @@
+Front Wiper Control SW Requirements (Rev. C)
+
+Inputs:
+  WiperStalk : OFF / INT / LOW / HIGH
+  IntLevel   : 1..5 (only meaningful when WiperStalk = INT)
+  RainIntensity : 0..100 % (rain sensor, resolution 1 %, 255 = sensor fault)
+  VehSpd     : 0..250 km/h (resolution 1 km/h)
+  IgnState   : OFF / ON
+Output:
+  WiperMotorCmd : STOP / SLOW / FAST
+  WipeInterval_ms : interval between wipes in INT mode
+
+REQ-WP-01: When IgnState = ON and WiperStalk = LOW, WiperMotorCmd shall be SLOW.
+REQ-WP-02: When IgnState = ON and WiperStalk = HIGH, WiperMotorCmd shall be FAST.
+REQ-WP-03: When IgnState = ON and WiperStalk = INT, the wiper shall wipe once (SLOW) every WipeInterval_ms, where WipeInterval_ms = 10000 - (IntLevel - 1) * 2000 (IntLevel 1 -> 10 s, IntLevel 5 -> 2 s).
+REQ-WP-04: In INT mode, if VehSpd is greater than 100 km/h, WipeInterval_ms shall be halved.
+REQ-WP-05: In INT mode, if RainIntensity is 60 % or higher, WiperMotorCmd shall be SLOW continuously (no interval).
+REQ-WP-06: If RainIntensity = 255 (sensor fault), the SW shall ignore REQ-WP-05 and use the interval of REQ-WP-03/04.
+REQ-WP-07: When IgnState changes to OFF while the wiper is moving, the wiper shall complete the current wipe and park (WiperMotorCmd = STOP after park position is reached, within 2 s).
+REQ-WP-08 (performance): The SW shall change WiperMotorCmd within 100 ms after a WiperStalk position change.
