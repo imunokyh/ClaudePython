@@ -33,6 +33,9 @@ python -m venv .venv
 | 린트 | `.\.venv\Scripts\python.exe -m ruff check .` |
 | 포맷 검사 / 적용 | `.\.venv\Scripts\python.exe -m ruff format --check .` / `... ruff format .` |
 | 주석률·함수 길이 | `.\.venv\Scripts\python.exe -m tools src tools` |
+| 타입 검사 (strict) | `.\.venv\Scripts\python.exe -m mypy` |
+
+아키텍처 규칙(의존 방향, 금지 import·호출, 전역 상태, 비공개 속성 접근)은 `tools/arch_rules.py`로 검사하며 pytest(`tests/tools/test_arch_rules.py`)에 포함된다.
 
 PR을 올리기 전에 위 검사를 모두 통과시킨다. Ruff는 `.claude/`(스킬 스크립트)를 검사하지 않는다.
 

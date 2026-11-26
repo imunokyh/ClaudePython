@@ -35,7 +35,13 @@
 
 ### 1.2 SA-11 예외
 
-- `controller`의 QM 호출 감싸기에서는 포괄 예외 처리(`except Exception`)가 설계상 필요하다(SWE2-ARC 2.4절). `pyproject.toml`의 `per-file-ignores`에 `controller.py`의 `BLE001`만 등록하고, 이 문서를 근거로 기록한다. 그 밖의 `# noqa`는 쓰지 않는다.
+- `controller`의 QM 호출 감싸기와 `runtime.runner`의 평가 예외 처리(SWE3-DD 5.2, 출력 유지)에서는 포괄 예외 처리(`except Exception`)가 설계상 필요하다(SWE2-ARC 2.4절). `pyproject.toml`의 `per-file-ignores`에 두 파일의 `BLE001`만 등록한다. 그 밖의 `# noqa`는 쓰지 않는다.
+- SA-11 재귀 금지의 예외: `types.freeze_raw`는 JSON 중첩 구조를 바꾸는 재귀 함수이며, 깊이 제한(32단계, 넘으면 `Unsupported`)을 둔다. 검사기(`tools/arch_rules.py`)의 예외 목록에 등록한다.
+- SA-10의 web 예외: `logging.getLogger(...)` 대입만 허용한다.
+
+### 1.4 검사 도구
+
+SA-7, SA-8, SA-10, SA-11의 AST 검사는 `tools/arch_rules.py`가 하고, `tests/architecture/`와 `tests/tools/test_arch_rules.py`(음성 시험 포함)가 pytest로 실행한다. 따라서 pytest가 통과하면 이 항목들도 통과한 것이다.
 
 ### 1.3 음성 시험
 
