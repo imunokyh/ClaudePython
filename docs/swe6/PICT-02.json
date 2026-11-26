@@ -1,0 +1,51 @@
+{
+  "id": "PICT-02",
+  "model_file": "PICT-02.pict.txt",
+  "model": "Fire: true, false\nOvertemp: true, false\nAdult: true, false\n\nIF [Fire] = \"false\" AND [Overtemp] = \"false\" THEN [Adult] = \"true\";\n",
+  "command": "pict PICT-02.pict.txt /o:3 /r:0",
+  "pict_version_source": "https://github.com/microsoft/pict",
+  "order": 3,
+  "header": [
+    "Fire",
+    "Overtemp",
+    "Adult"
+  ],
+  "rows": [
+    {
+      "Fire": "false",
+      "Overtemp": "false",
+      "Adult": "true"
+    },
+    {
+      "Fire": "true",
+      "Overtemp": "true",
+      "Adult": "false"
+    },
+    {
+      "Fire": "false",
+      "Overtemp": "true",
+      "Adult": "false"
+    },
+    {
+      "Fire": "false",
+      "Overtemp": "true",
+      "Adult": "true"
+    },
+    {
+      "Fire": "true",
+      "Overtemp": "false",
+      "Adult": "false"
+    },
+    {
+      "Fire": "true",
+      "Overtemp": "false",
+      "Adult": "true"
+    },
+    {
+      "Fire": "true",
+      "Overtemp": "true",
+      "Adult": "true"
+    }
+  ],
+  "warnings": ""
+}

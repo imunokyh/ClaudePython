@@ -1,0 +1,6 @@
+RiskL: true, false
+RiskR: true, false
+IsoL: true, false
+IsoR: true, false
+Cmd: NONE, L_UNLOCK, R_UNLOCK, ALL_UNLOCK, L_LOCK, R_LOCK, ALL_LOCK
+Speed: 0.0, 3.0

@@ -54,8 +54,9 @@ skip_covered = false
 line-length = 80
 target-version = "py312"
 src = ["src", "tests", "tools"]
-# Claude Code 스킬 스크립트는 제품 코드가 아니므로 검사하지 않는다
-extend-exclude = [".claude"]
+# Claude Code 스킬 스크립트와 문서에 보존한 시험 케이스 생성 스크립트
+# (docs/swe6/*.py)는 제품 코드가 아니므로 검사하지 않는다
+extend-exclude = [".claude", "docs"]
 
 [tool.ruff.lint]
 # E/W: pycodestyle, F: pyflakes, I: import 정렬, N: 명명 규칙(Google Python Style),

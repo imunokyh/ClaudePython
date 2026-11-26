@@ -1,0 +1,136 @@
+{
+  "id": "PICT-01",
+  "model_file": "PICT-01.pict.txt",
+  "model": "Source: physical_button, avn, voice, mobile_app\nAction: lock, unlock\nSide: left, right, all\n",
+  "command": "pict PICT-01.pict.txt /o:3 /r:0",
+  "pict_version_source": "https://github.com/microsoft/pict",
+  "order": 3,
+  "header": [
+    "Source",
+    "Action",
+    "Side"
+  ],
+  "rows": [
+    {
+      "Source": "voice",
+      "Action": "unlock",
+      "Side": "right"
+    },
+    {
+      "Source": "mobile_app",
+      "Action": "unlock",
+      "Side": "right"
+    },
+    {
+      "Source": "physical_button",
+      "Action": "lock",
+      "Side": "right"
+    },
+    {
+      "Source": "avn",
+      "Action": "lock",
+      "Side": "left"
+    },
+    {
+      "Source": "mobile_app",
+      "Action": "lock",
+      "Side": "all"
+    },
+    {
+      "Source": "voice",
+      "Action": "unlock",
+      "Side": "all"
+    },
+    {
+      "Source": "avn",
+      "Action": "lock",
+      "Side": "all"
+    },
+    {
+      "Source": "mobile_app",
+      "Action": "lock",
+      "Side": "left"
+    },
+    {
+      "Source": "physical_button",
+      "Action": "unlock",
+      "Side": "left"
+    },
+    {
+      "Source": "physical_button",
+      "Action": "unlock",
+      "Side": "all"
+    },
+    {
+      "Source": "voice",
+      "Action": "lock",
+      "Side": "left"
+    },
+    {
+      "Source": "physical_button",
+      "Action": "unlock",
+      "Side": "right"
+    },
+    {
+      "Source": "voice",
+      "Action": "unlock",
+      "Side": "left"
+    },
+    {
+      "Source": "avn",
+      "Action": "unlock",
+      "Side": "right"
+    },
+    {
+      "Source": "voice",
+      "Action": "lock",
+      "Side": "all"
+    },
+    {
+      "Source": "physical_button",
+      "Action": "lock",
+      "Side": "left"
+    },
+    {
+      "Source": "mobile_app",
+      "Action": "unlock",
+      "Side": "left"
+    },
+    {
+      "Source": "avn",
+      "Action": "unlock",
+      "Side": "left"
+    },
+    {
+      "Source": "physical_button",
+      "Action": "lock",
+      "Side": "all"
+    },
+    {
+      "Source": "avn",
+      "Action": "lock",
+      "Side": "right"
+    },
+    {
+      "Source": "voice",
+      "Action": "lock",
+      "Side": "right"
+    },
+    {
+      "Source": "avn",
+      "Action": "unlock",
+      "Side": "all"
+    },
+    {
+      "Source": "mobile_app",
+      "Action": "unlock",
+      "Side": "all"
+    },
+    {
+      "Source": "mobile_app",
+      "Action": "lock",
+      "Side": "right"
+    }
+  ],
+  "warnings": ""
+}
