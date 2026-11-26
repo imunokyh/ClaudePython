@@ -116,9 +116,12 @@ GitHub Flow를 쓴다.
 
 ## CI
 
-- Jenkins를 쓴다. 서버는 `172.16.7.117`에 있다.
-- 파이프라인 정의는 저장소 루트의 `Jenkinsfile`에 둔다.
-- PR마다 다음을 실행한다: `ruff check`, `ruff format --check`, pytest(Branch 커버리지 100% 확인), 함수 길이·주석률 측정. 하나라도 실패하면 PR을 병합하지 않는다.
+- Jenkins를 쓴다. 주소는 `http://172.16.7.117`이고, 이 개발 PC에서 Windows 서비스로 동작한다(Built-In 노드, Windows 11).
+- Job은 Multibranch Pipeline `ClaudePython-CI`다. 5분마다 GitHub 저장소를 확인해 브랜치마다 빌드한다. 사내 IP라 GitHub webhook은 쓸 수 없다. 기존 FreeStyle Job `ClaudePython`은 사용자 시험용이므로 건드리지 않는다.
+- 파이프라인 정의는 저장소 루트의 `Jenkinsfile`에 둔다. Windows `bat` 명령을 쓰며, Python 경로는 Jenkins 전역 환경 변수 `CHILD_LOCK_PYTHON`이 있으면 그것을, 없으면 이 PC의 Python 3.12 경로를 쓴다.
+- 빌드마다 다음을 실행한다: `ruff check`, `ruff format --check`, pytest(Branch 커버리지 100% 확인), 함수 길이·주석률 측정. 하나라도 실패하면 PR을 병합하지 않는다.
+- Jenkins 결과는 GitHub에 상태로 표시되지 않는다. PR을 병합하기 전에 Jenkins API로 그 브랜치의 마지막 빌드가 `SUCCESS`이고, 빌드한 커밋이 PR의 마지막 커밋과 같은지 확인한다.
+- Jenkins 인증 정보(사용자, API 토큰)는 Windows 사용자 환경 변수 `JENKINS_USER`, `JENKINS_API_TOKEN`에만 둔다. 저장소, 문서, 커밋, PR에 절대 기록하지 않는다.
 
 ## 작성 언어와 응답 방식
 
