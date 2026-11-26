@@ -202,3 +202,9 @@ def test_submit_is_serialized_with_tick():
     runner.tick()
     _, raw = runner._controller.calls[0]
     assert len(raw.commands) == 200
+
+
+def test_runner_now_reports_clock_time():
+    clock, runner = _runner()
+    clock.set(42.5)
+    assert runner.now() == 42.5

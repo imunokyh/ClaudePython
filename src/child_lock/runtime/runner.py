@@ -134,6 +134,10 @@ class Runner:
                 self.evaluation_errors += 1
                 return self._controller.last_decision
 
+    def now(self) -> float:
+        """@brief 시각 공급원의 현재 시각 (시뮬레이터 시각 동기화용)."""
+        return self._clock.now()
+
     def status(self) -> Decision:
         """@brief 마지막 평가 결과."""
         with self._lock:

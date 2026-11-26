@@ -242,3 +242,23 @@ def test_check_tree_maps_paths_to_module_names(tmp_path):
 
 def test_real_source_tree_has_no_violations():
     assert check_tree(__import__("pathlib").Path("src")) == []
+
+
+def test_scripted_clock_is_forbidden_in_web():
+    source = """
+        from child_lock.runtime.clock import ScriptedClock
+
+        def make():
+            return ScriptedClock(0.0)
+    """
+    assert "DR-4" in _rules(_check("child_lock.web.app", source))
+
+
+def test_scripted_clock_is_allowed_outside_web():
+    source = "from child_lock.runtime.clock import ScriptedClock\n"
+    assert _check("child_lock.runtime.runner", source) == []
+
+
+def test_uvicorn_is_allowed_only_in_web():
+    assert _check("child_lock.web.__main__", "import uvicorn\n") == []
+    assert "DR-5" in _rules(_check("child_lock.controller", "import uvicorn\n"))

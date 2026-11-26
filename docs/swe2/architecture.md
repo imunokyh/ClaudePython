@@ -95,7 +95,7 @@ DR-1~DR-4, DR-8은 패키지 내부(`child_lock.*`) import에 대한 규칙이�
 | 전체 | `__future__`, `dataclasses`, `enum`, `typing`, `math`, `collections`, `types`(MappingProxyType), `itertools`, `functools` |
 | `qm.replay` | 위 + `hashlib`, `json` |
 | `runtime.*` | 위 + DR-5 예외 |
-| `web.*` | 위 + `fastapi`, `pydantic`, `starlette`, `json`, `logging`, `asyncio`, `pathlib`(정적 파일 위치) |
+| `web.*` | 위 + `fastapi`, `pydantic`, `starlette`, `uvicorn`, `json`, `logging`, `asyncio`, `contextlib`, `pathlib`(정적 파일 위치) |
 | DR-6 | `qm.*`, `web.*`는 다른 모듈 객체의 `_`로 시작하는 속성에 접근하지 않고, `setattr`, `object.__setattr__`, `__dict__`를 쓰지 않는다 |
 | DR-7 | `types`의 dataclass는 모두 `frozen=True`, `slots=True`이고 필드 타입은 불변 타입(`int`, `float`, `str`, `bool`, Enum, `tuple`, `frozenset`, 다른 불변 dataclass, `None`)만 쓴다 |
 

@@ -6,7 +6,10 @@
 
 ClaudePython — "AI를 이용한 파이썬 코드". 현재 과제는 OEM 요구사항 사양서(OEM-SWR-001, `OEM/`에 있으며 커밋 금지)에 따른 전자식 차일드락 제어 SW의 PC/SIL 참조 구현이다. 단계별 계획과 의사결정은 `docs/development-plan.md`에 있다.
 
-- `src/child_lock/`: 제품 코드 패키지.
+- `src/child_lock/`: 제품 코드 패키지. 구조와 의존 규칙은 `docs/swe2/architecture.md`, 함수 설계는 `docs/swe3/detailed-design.md`를 따른다.
+  - ASIL B: `types`, `controller`, `runtime/`(시각·주기 실행), `safety/`(검사·충돌·접근위험·순위 판정)
+  - QM: `qm/`(규칙 제안·이벤트 기록·해시), `web/`(FastAPI, 시뮬레이터)
+  - QM은 출력을 직접 바꾸지 않고 제안만 한다. 순위 판정은 `safety/arbiter.py`만 한다.
 - `tests/`: pytest 테스트. `tests/tools/`는 품질 측정 도구 테스트.
 - `tools/code_metrics.py`: 주석률·함수 길이 측정 도구 (`python -m tools <경로>`).
 - `Jenkinsfile`: CI 파이프라인 (Ruff, pytest 커버리지, 주석률·함수 길이).
@@ -34,6 +37,7 @@ python -m venv .venv
 | 포맷 검사 / 적용 | `.\.venv\Scripts\python.exe -m ruff format --check .` / `... ruff format .` |
 | 주석률·함수 길이 | `.\.venv\Scripts\python.exe -m tools src tools` |
 | 타입 검사 (strict) | `.\.venv\Scripts\python.exe -m mypy` |
+| Web 시뮬레이터 실행 | `.\.venv\Scripts\python.exe -m child_lock.web` → http://127.0.0.1:8000 |
 
 아키텍처 규칙(의존 방향, 금지 import·호출, 전역 상태, 비공개 속성 접근)은 `tools/arch_rules.py`로 검사하며 pytest(`tests/tools/test_arch_rules.py`)에 포함된다.
 
