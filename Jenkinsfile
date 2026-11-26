@@ -48,6 +48,11 @@ pipeline {
                 bat '%VENV_PY% -m tools src tools'
             }
         }
+        stage('SBOM') {
+            steps {
+                bat '%VENV_PY% -m pip list --format=json > reports\\sbom.json'
+            }
+        }
     }
 
     post {
