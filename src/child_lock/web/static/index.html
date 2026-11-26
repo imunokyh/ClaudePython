@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>전자식 차일드락 시뮬레이터</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --line:#d9dde3; --text:#1d2430; --muted:#5b6575;
+          --lock:#b3261e; --release:#1e7a3b; --warn:#a15c00; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#14171c; --card:#1d2128; --line:#333a45; --text:#e6e9ee; --muted:#a2abb8;
+            --lock:#ff8a80; --release:#7ee2a0; --warn:#ffcc80; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,"Malgun Gothic",sans-serif; background:var(--bg); color:var(--text); }
+  header { padding:16px; border-bottom:1px solid var(--line); }
+  h1 { font-size:20px; margin:0; } h2 { font-size:15px; margin:0 0 8px; }
+  main { display:grid; gap:12px; padding:12px 16px; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); }
+  section { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:12px; }
+  label { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:3px 0; }
+  .muted { color:var(--muted); font-size:13px; }
+  .doors { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .door { border:1px solid var(--line); border-radius:6px; padding:10px; text-align:center; font-weight:600; }
+  .LOCK { color:var(--lock); } .RELEASE { color:var(--release); }
+  button { padding:6px 10px; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--text); cursor:pointer; }
+  .row { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th, td { border-bottom:1px solid var(--line); padding:3px 4px; text-align:left; }
+  .tablewrap { max-height:260px; overflow:auto; }
+  #warn { color:var(--warn); font-weight:600; }
+</style>
+</head>
+<body>
+<header>
+  <h1>전자식 차일드락 시뮬레이터</h1>
+  <div class="muted">PC/SIL 참조 구현. 입력은 50 ms마다 서버 시각 기준 타임스탬프와 함께 전송됩니다.</div>
+</header>
+<main>
+  <section>
+    <h2>차량 입력</h2>
+    <label>차속 (km/h) <input id="vehicle_speed_kph" type="number" value="0" min="0" max="300" step="0.1"></label>
+    <label>기어 <select id="gear"><option>P</option><option>R</option><option>N</option><option>D</option></select></label>
+    <label>충돌 상태 <select id="crash_status"><option>NONE</option><option>PENDING</option><option>CONFIRMED</option></select></label>
+    <label>시동 ON <input id="ignition_on" type="checkbox" checked></label>
+    <label>후측방 접근위험 (좌) <input id="rear_left_approach_risk" type="checkbox"></label>
+    <label>후측방 접근위험 (우) <input id="rear_right_approach_risk" type="checkbox"></label>
+    <label>화재 <input id="fire_detected" type="checkbox"></label>
+    <label>과온 <input id="overtemperature_detected" type="checkbox"></label>
+    <label>성인 탑승 <input id="adult_present" type="checkbox"></label>
+    <label>ISOFIX (좌) <input id="isofix_left" type="checkbox"></label>
+    <label>ISOFIX (우) <input id="isofix_right" type="checkbox"></label>
+    <label>센서 고장 <input id="sensor_fault" type="checkbox"></label>
+    <label>입력 전송 <input id="sending" type="checkbox" checked></label>
+    <div class="muted">"입력 전송"을 끄면 0.2초 뒤 입력 지연(STALE)이 됩니다.</div>
+  </section>
+  <section>
+    <h2>운전자 명령</h2>
+    <label>경로 <select id="source"><option value="physical_button">물리 버튼</option><option value="avn">AVN</option><option value="voice">음성</option><option value="mobile_app">모바일 앱</option></select></label>
+    <div class="row"><button data-side="left" data-action="lock">좌 잠금</button><button data-side="left" data-action="unlock">좌 해제</button></div>
+    <div class="row"><button data-side="right" data-action="lock">우 잠금</button><button data-side="right" data-action="unlock">우 해제</button></div>
+    <div class="row"><button data-side="all" data-action="lock">전체 잠금</button><button data-side="all" data-action="unlock">전체 해제</button></div>
+  </section>
+  <section>
+    <h2>출력과 상태</h2>
+    <div class="doors"><div class="door" id="lock_left">좌 -</div><div class="door" id="lock_right">우 -</div></div>
+    <table><tbody id="status"></tbody></table>
+    <div id="warn"></div>
+  </section>
+  <section style="grid-column:1/-1">
+    <h2>최근 제어결정 (최대 100건)</h2>
+    <div class="tablewrap"><table><thead><tr><th>ID</th><th>시각</th><th>좌</th><th>우</th><th>상태</th><th>이유</th><th>좌 이유</th><th>우 이유</th><th>입력</th><th>경고</th></tr></thead><tbody id="events"></tbody></table></div>
+  </section>
+</main>
+<script>
+const BOOL = ["ignition_on","rear_left_approach_risk","rear_right_approach_risk","fire_detected",
+  "overtemperature_detected","adult_present","isofix_left","isofix_right","sensor_fault"];
+let offset = null;  // 서버 시각 - performance.now()/1000
+let pending = [];
+
+async function syncClock() {
+  const t0 = performance.now();
+  const res = await fetch("/clock");
+  const { now_s } = await res.json();
+  const t1 = performance.now();
+  offset = now_s - (t0 + t1) / 2000;
+}
+function serverNow() { return offset === null ? 0 : offset + performance.now() / 1000; }
+
+function snapshot() {
+  const s = { source_timestamp_s: serverNow(),
+              vehicle_speed_kph: parseFloat(document.getElementById("vehicle_speed_kph").value),
+              gear: document.getElementById("gear").value,
+              crash_status: document.getElementById("crash_status").value };
+  for (const id of BOOL) s[id] = document.getElementById(id).checked;
+  return s;
+}
+
+async function send() {
+  if (offset === null) return;
+  const body = { commands: pending };
+  pending = [];
+  if (document.getElementById("sending").checked) body.snapshot = snapshot();
+  if (!body.snapshot && body.commands.length === 0) return;
+  await fetch("/input", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+}
+
+function cell(text) { const td = document.createElement("td"); td.textContent = text; return td; }
+
+async function refresh() {
+  const st = await (await fetch("/status")).json();
+  for (const side of ["lock_left", "lock_right"]) {
+    const el = document.getElementById(side);
+    el.textContent = (side === "lock_left" ? "좌 " : "우 ") + st[side];
+    el.className = "door " + st[side];
+  }
+  const tbody = document.getElementById("status");
+  tbody.replaceChildren(...["state","reason_code","priority_reason","reason_left","reason_right","input_validity","warning_code"]
+    .map(k => { const tr = document.createElement("tr"); tr.append(cell(k), cell(st[k])); return tr; }));
+  document.getElementById("warn").textContent = st.warning_code !== "NONE" ? "경고: " + st.warning_code : "";
+  const events = await (await fetch("/events")).json();
+  document.getElementById("events").replaceChildren(...events.slice().reverse().map(e => {
+    const tr = document.createElement("tr");
+    for (const k of ["event_id","timestamp_s","lock_left","lock_right","state","reason_code","reason_left","reason_right","input_validity","warning_code"])
+      tr.append(cell(k === "timestamp_s" ? e[k].toFixed(2) : e[k]));
+    return tr;
+  }));
+}
+
+for (const btn of document.querySelectorAll("button[data-side]")) {
+  btn.addEventListener("click", () => pending.push({ side: btn.dataset.side, action: btn.dataset.action,
+                                                     source: document.getElementById("source").value }));
+}
+syncClock();
+setInterval(syncClock, 5000);
+setInterval(send, 50);
+setInterval(refresh, 250);
+</script>
+</body>
+</html>

@@ -36,6 +36,11 @@ where = ["src"]
 testpaths = ["tests"]
 pythonpath = ["src", "."]
 addopts = "-ra"
+# Starlette TestClient의 httpx 폐기 예정 안내(외부 라이브러리 경고)만 무시한다.
+# 대체 패키지는 검증 전이라 도입하지 않았다. 그 밖의 경고는 그대로 표시한다.
+filterwarnings = [
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+]
 
 [tool.coverage.run]
 branch = true

@@ -86,15 +86,20 @@ _EXTRA_EXTERNAL = {
     "web": frozenset(
         {
             "asyncio",
+            "contextlib",
             "fastapi",
             "json",
             "logging",
             "pathlib",
             "pydantic",
             "starlette",
+            "uvicorn",
         }
     ),
 }
+
+## web에서 쓰면 안 되는 이름: 시험용 시계는 시험 하니스만 쓴다(SWE2-ARC 2.4)
+_WEB_FORBIDDEN_NAMES = frozenset({"ScriptedClock"})
 
 ## 패키지(`__init__`)인 모듈 이름
 _PACKAGES = frozenset(
@@ -190,6 +195,26 @@ def _check_imports(module: str, group: str, tree: ast.AST) -> list[str]:
             found.append(f"{rule}: {module}:{line}: 내부 import {target}")
         elif top != _ROOT and top not in external:
             found.append(f"DR-5: {module}:{line}: 외부 import {target}")
+    return found
+
+
+def _check_web_names(module: str, group: str, tree: ast.AST) -> list[str]:
+    """@brief web이 시험용 시계(ScriptedClock)를 쓰는지 검사한다 (DR-4).
+
+    web이 시험 벡터 시각을 넣으면 QM이 ASIL B 시간 판정의 기준을 쥐게 된다.
+    """
+    if group != "web":
+        return []
+    found = []
+    for node in ast.walk(tree):
+        names = []
+        if isinstance(node, ast.Name):
+            names.append(node.id)
+        elif isinstance(node, ast.ImportFrom):
+            names.extend(alias.name for alias in node.names)
+        for name in names:
+            if name in _WEB_FORBIDDEN_NAMES:
+                found.append(f"DR-4: {module}:{node.lineno}: {name} 사용")
     return found
 
 
@@ -329,6 +354,7 @@ def check_source(module: str, source: str) -> list[str]:
     group = _group_of(module)
     return (
         _check_imports(module, group, tree)
+        + _check_web_names(module, group, tree)
         + _check_calls(module, tree)
         + _check_private(module, group, tree)
         + _check_module_state(module, group, tree)
