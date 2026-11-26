@@ -1,0 +1,16 @@
+# OEM 입력 문서: 교육용 저작물로 과정 밖 배포 금지 (공개 저장소에 커밋하지 않음)
+OEM/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# 테스트·정적 분석 캐시와 결과
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+reports/
