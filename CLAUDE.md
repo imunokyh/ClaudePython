@@ -10,7 +10,11 @@ ClaudePython — "AI를 이용한 파이썬 코드". 현재 과제는 OEM 요구
   - ASIL B: `types`, `controller`, `runtime/`(시각·주기 실행), `safety/`(검사·충돌·접근위험·순위 판정)
   - QM: `qm/`(규칙 제안·이벤트 기록·해시), `web/`(FastAPI, 시뮬레이터)
   - QM은 출력을 직접 바꾸지 않고 제안만 한다. 순위 판정은 `safety/arbiter.py`만 한다.
-- `tests/`: pytest 테스트. `tests/tools/`는 품질 측정 도구 테스트.
+- `tests/`: pytest 테스트.
+  - `tests/unit/`: 단위 테스트(SWE.4). `test_decision_table.py`는 요구사항 부록 A 결정표 55행 전부.
+  - `tests/integration/`: 통합 테스트 IT-01~11(SWE.5).
+  - `tests/system/`: SW 검증 시험 202건(SWE.6). `harness.py`의 `Bench`로 HTTP·시험용 시계를 구동한다. 케이스 원본은 `docs/swe6/system-test-cases.json`.
+  - `tests/tools/`: 품질 측정 도구·아키텍처 검사기 테스트.
 - `tools/code_metrics.py`: 주석률·함수 길이 측정 도구 (`python -m tools <경로>`).
 - `Jenkinsfile`: CI 파이프라인 (Ruff, pytest 커버리지, 주석률·함수 길이).
 - `.claude/skills/system-test-case-generator/`: 요구사항으로부터 A-SPICE(SWE.6/SYS.5)·ISO 26262-6 기준의 테스트 케이스 엑셀을 만드는 스킬. `scripts/`에 PICT 실행 래퍼와 추적성·커버리지 검증 스크립트가 있다.

@@ -1,0 +1,5 @@
+Fire: true, false
+Overtemp: true, false
+Adult: true, false
+
+IF [Fire] = "false" AND [Overtemp] = "false" THEN [Adult] = "true";

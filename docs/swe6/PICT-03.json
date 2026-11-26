@@ -1,0 +1,131 @@
+{
+  "id": "PICT-03",
+  "model_file": "PICT-03.pict.txt",
+  "model": "RiskL: true, false\nRiskR: true, false\nIsoL: true, false\nIsoR: true, false\nCmd: NONE, L_UNLOCK, R_UNLOCK, ALL_UNLOCK, L_LOCK, R_LOCK, ALL_LOCK\nSpeed: 0.0, 3.0\n",
+  "command": "pict PICT-03.pict.txt /o:2 /r:0",
+  "pict_version_source": "https://github.com/microsoft/pict",
+  "order": 2,
+  "header": [
+    "RiskL",
+    "RiskR",
+    "IsoL",
+    "IsoR",
+    "Cmd",
+    "Speed"
+  ],
+  "rows": [
+    {
+      "RiskL": "false",
+      "RiskR": "true",
+      "IsoL": "false",
+      "IsoR": "true",
+      "Cmd": "ALL_UNLOCK",
+      "Speed": "0.0"
+    },
+    {
+      "RiskL": "true",
+      "RiskR": "false",
+      "IsoL": "true",
+      "IsoR": "false",
+      "Cmd": "L_LOCK",
+      "Speed": "3.0"
+    },
+    {
+      "RiskL": "true",
+      "RiskR": "false",
+      "IsoL": "false",
+      "IsoR": "false",
+      "Cmd": "R_LOCK",
+      "Speed": "0.0"
+    },
+    {
+      "RiskL": "false",
+      "RiskR": "true",
+      "IsoL": "true",
+      "IsoR": "true",
+      "Cmd": "L_UNLOCK",
+      "Speed": "3.0"
+    },
+    {
+      "RiskL": "true",
+      "RiskR": "true",
+      "IsoL": "true",
+      "IsoR": "true",
+      "Cmd": "NONE",
+      "Speed": "0.0"
+    },
+    {
+      "RiskL": "false",
+      "RiskR": "true",
+      "IsoL": "true",
+      "IsoR": "false",
+      "Cmd": "ALL_LOCK",
+      "Speed": "0.0"
+    },
+    {
+      "RiskL": "false",
+      "RiskR": "false",
+      "IsoL": "false",
+      "IsoR": "false",
+      "Cmd": "NONE",
+      "Speed": "3.0"
+    },
+    {
+      "RiskL": "true",
+      "RiskR": "false",
+      "IsoL": "false",
+      "IsoR": "false",
+      "Cmd": "L_UNLOCK",
+      "Speed": "0.0"
+    },
+    {
+      "RiskL": "false",
+      "RiskR": "true",
+      "IsoL": "false",
+      "IsoR": "false",
+      "Cmd": "R_UNLOCK",
+      "Speed": "3.0"
+    },
+    {
+      "RiskL": "true",
+      "RiskR": "false",
+      "IsoL": "true",
+      "IsoR": "false",
+      "Cmd": "ALL_UNLOCK",
+      "Speed": "3.0"
+    },
+    {
+      "RiskL": "true",
+      "RiskR": "false",
+      "IsoL": "false",
+      "IsoR": "true",
+      "Cmd": "ALL_LOCK",
+      "Speed": "3.0"
+    },
+    {
+      "RiskL": "false",
+      "RiskR": "true",
+      "IsoL": "true",
+      "IsoR": "true",
+      "Cmd": "R_LOCK",
+      "Speed": "3.0"
+    },
+    {
+      "RiskL": "false",
+      "RiskR": "true",
+      "IsoL": "false",
+      "IsoR": "true",
+      "Cmd": "L_LOCK",
+      "Speed": "0.0"
+    },
+    {
+      "RiskL": "true",
+      "RiskR": "false",
+      "IsoL": "true",
+      "IsoR": "true",
+      "Cmd": "R_UNLOCK",
+      "Speed": "0.0"
+    }
+  ],
+  "warnings": ""
+}
