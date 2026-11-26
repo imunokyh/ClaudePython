@@ -1,19 +1,104 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+이 파일은 Claude Code(claude.ai/code)가 이 저장소에서 작업할 때 참고하는 지침이다.
 
-## Project
+## 프로젝트
 
-ClaudePython — "AI를 이용한 파이썬 코드" (Python code written with AI). The repository currently contains only a README; no source code, dependencies, build, lint, or test tooling has been set up yet.
+ClaudePython — "AI를 이용한 파이썬 코드". 아직 파이썬 소스 코드, 의존성, 빌드·린트·테스트 설정은 없다. 지금 저장소에 있는 것은 README와 Claude Code 설정(`.claude/`)뿐이다.
 
-When adding the first code or tooling (e.g. `pyproject.toml`, a test framework, a linter), update this file with the actual commands — including how to run a single test — and a short description of the architecture once it spans multiple modules.
+- `.claude/skills/system-test-case-generator/`: 요구사항으로부터 A-SPICE(SWE.6/SYS.5)·ISO 26262-6 기준의 테스트 케이스 엑셀을 만드는 스킬. `scripts/`에 PICT 실행 래퍼와 추적성·커버리지 검증 스크립트가 있다.
+- `.claude/skills/test-driven-development/`: github.com/obra/superpowers의 TDD 스킬(MIT).
+- `.claude/agents/system-test-case-designer.md`: 위 테스트 케이스 스킬을 쓰는 서브 에이전트(Sonnet).
 
-## Development workflow
+첫 코드를 추가할 때 `pyproject.toml`에 아래 "개발 환경"과 "소스코드 품질" 설정을 넣고, 실제 명령어(단일 테스트 실행 방법 포함)를 이 파일에 적는다. 코드가 여러 모듈로 나뉘면 구조 설명도 짧게 추가한다.
 
-- Before writing any implementation code (new feature, bug fix, refactor, behavior change), invoke the `test-driven-development` skill (`.claude/skills/test-driven-development/`, from github.com/obra/superpowers, MIT) and follow its red-green-refactor cycle: write a failing test, run it and watch it fail, then write the minimal code to pass.
-- No test runner is configured yet. When the first Python code is added, set up pytest and record the commands (full suite and single test) in this file.
+## 개발 환경
 
-## Environment
+- **언어**: Python 3.12 이상. `pyproject.toml`에 `requires-python = ">=3.12"`로 고정한다. 더 높은 버전으로 올릴 때는 이 파일과 `pyproject.toml`을 함께 고친다.
+- **단위 테스트**: pytest. 커버리지는 pytest-cov로 측정한다.
+- **정적 분석**: Ruff. `ruff check`(린트)와 `ruff format`(포매팅)을 모두 쓴다. 설정은 `pyproject.toml`의 `[tool.ruff]`에 둔다.
+- 개발 의존성(pytest, pytest-cov, ruff)은 `pyproject.toml`의 개발용 의존성 그룹에 버전과 함께 적는다.
 
-- Windows 11, PowerShell 5.1 shell. Python 3.12 is installed (`python`); there is no `py` launcher. Set `PYTHONUTF8=1` when a script reads/writes Korean text, since the default codepage is cp949.
-- The README and the user communicate in Korean; respond in Korean unless asked otherwise.
+## 개발 절차
+
+개발은 A-SPICE 절차를 따르며, 아래 순서로 진행한다. 각 단계의 산출물은 `docs/` 아래에 한글로 작성하고, 앞 단계 산출물과의 양방향 추적성(ID로 연결)을 유지한다.
+
+| 순서 | 단계 | A-SPICE | 산출물 |
+|---|---|---|---|
+| 1 | 요구사항 분석 | SWE.1 | SW 요구사항 명세 (요구사항마다 고유 ID) |
+| 2 | 아키텍처 설계 | SWE.2 | SW 아키텍처 설계서 (컴포넌트, 인터페이스) |
+| 3 | 상세 설계 | SWE.3 | 상세 설계서 (모듈·함수 단위) |
+| 4 | 구현 | SWE.3 | 소스 코드 |
+| 5 | 단위 테스트 | SWE.4 | pytest 단위 테스트, 커버리지 결과 |
+| 6 | 통합 테스트 | SWE.5 | 통합 테스트 명세와 결과 |
+| 7 | 시스템 테스트 | SWE.6 | 테스트 명세 엑셀과 결과 |
+
+- 앞 단계 산출물이 없으면 다음 단계로 넘어가지 않는다. 작은 수정도 영향받는 산출물을 함께 고친다.
+- 구현(4)과 단위 테스트(5)는 TDD로 함께 진행한다. 구현 코드를 쓰기 전에 `test-driven-development` 스킬을 호출하고 red-green-refactor 순서를 따른다: 실패하는 테스트 작성 → 실행해서 실패 확인 → 통과할 최소한의 코드 작성 → 리팩터링.
+- 시스템 테스트 케이스(7)는 `system-test-case-designer` 서브 에이전트(`system-test-case-generator` 스킬)로 만든다.
+
+## 소스코드 품질
+
+아래 기준은 PR 병합 조건이다. 하나라도 만족하지 못하면 병합하지 않는다.
+
+| 항목 | 기준 | 측정 방법 |
+|---|---|---|
+| 단위 테스트 성공률 | 100% (실패·에러 0건) | `pytest` |
+| Branch 커버리지 | **반드시** 100% | `pytest --cov --cov-branch --cov-fail-under=100` |
+| 순환 복잡도 | 함수마다 **반드시** 10 이하 | Ruff `C901`, `max-complexity = 10` |
+| 함수 길이 | 순수 코드 50줄 이하 | 빈 줄, 주석, docstring을 뺀 줄 수 |
+| 주석률 | 파일마다 20% 이상 | (주석 줄 + docstring 줄) ÷ (주석 줄 + docstring 줄 + 코드 줄), 빈 줄 제외 |
+| 명명 규칙 | Google Python Style Guide | Ruff `N`(pep8-naming) |
+| 린트·포맷 | 경고 0건, 포맷 차이 없음 | `ruff check`, `ruff format --check` |
+
+- **커버리지 100%**: 달성할 때까지 테스트를 추가한다. 커버리지만 채우는 의미 없는 테스트(검증 없는 호출, 결과를 확인하지 않는 테스트)는 쓰지 않는다. `# pragma: no cover`로 측정에서 빼는 것은 금지한다. 꼭 필요하면 이유를 PR에 적고 사용자 승인을 받는다.
+- **명명 규칙**(Google Python Style Guide): 모듈·패키지·함수·메서드·변수는 `lower_with_under`, 클래스·예외는 `CapWords`, 상수는 `CAPS_WITH_UNDER`, 내부용은 앞에 `_`를 붙인다.
+- **주석**: Doxygen 스타일로 쓴다. 모듈, 클래스, 공개 함수에는 docstring을 단다. docstring 안에서 `@brief`, `@param`, `@return`, `@raises` 태그를 쓴다. 주석과 docstring은 한글로 쓴다.
+
+  ```python
+  def calc_interval_ms(level: int) -> int:
+      """@brief 인터벌 단계로 와이프 간격을 계산한다.
+
+      @param level 인터벌 단계 (1~5)
+      @return 와이프 간격 (ms)
+      @raises ValueError level이 1~5 범위를 벗어난 경우
+      """
+  ```
+
+- 함수 길이와 주석률은 Ruff로 측정할 수 없다. 측정 스크립트를 추가하면 그 실행 명령을 이 표에 적는다.
+
+## Git 브랜치 규칙
+
+GitHub Flow를 쓴다.
+
+- **`master`**: 항상 배포 가능한 상태를 유지한다. `master`에 직접 커밋하거나 push하지 않는다. 모든 변경은 PR로 병합한다.
+- **작업 브랜치**: 최신 `master`에서 만든다. 이름은 `<유형>/<짧은-설명>` 형식이며 소문자와 하이픈만 쓴다.
+
+  | 유형 | 용도 | 예 |
+  |---|---|---|
+  | `feature/` | 새 기능 | `feature/wiper-interval` |
+  | `fix/` | 버그 수정 | `fix/door-lock-timeout` |
+  | `refactor/` | 동작 변경 없는 구조 개선 | `refactor/split-validator` |
+  | `docs/` | 문서·산출물만 변경 | `docs/swe2-architecture` |
+  | `test/` | 테스트만 추가·수정 | `test/boundary-cases` |
+  | `chore/` | 설정, CI, 의존성 | `chore/ruff-config` |
+
+- **커밋 메시지**: 한글로 쓴다. 첫 줄은 `<유형>: <요약>` 형식으로 50자 안팎(예: `feature: 와이퍼 인터벌 계산 추가`), 빈 줄 다음에 무엇을 왜 바꿨는지 적는다. 관련 요구사항 ID가 있으면 본문에 적는다.
+- **PR**:
+  - 대상은 `master`다. 설명은 한글로 쓰고, 변경 내용, 관련 요구사항 ID, 테스트 결과를 적는다.
+  - "소스코드 품질"의 모든 기준과 Jenkins CI 통과가 병합 조건이다.
+  - 병합은 squash merge로 하고, 병합한 브랜치는 삭제한다.
+- `master`에 force push하지 않는다. 작업 브랜치의 rebase나 force push는 그 브랜치 작성자만 한다.
+
+## CI
+
+- Jenkins를 쓴다. 서버는 `172.16.7.117`에 있다.
+- 파이프라인 정의는 저장소 루트의 `Jenkinsfile`에 둔다.
+- PR마다 다음을 실행한다: `ruff check`, `ruff format --check`, pytest(Branch 커버리지 100% 확인), 함수 길이·주석률 측정. 하나라도 실패하면 PR을 병합하지 않는다.
+
+## 작성 언어와 응답 방식
+
+- 이 파일(CLAUDE.md)은 반드시 한글로 작성한다. 내용을 추가하거나 고칠 때도 한글로 쓴다.
+- 모든 산출물(설계 문서, 테스트 명세, 주석, docstring, 커밋 메시지, PR 설명)은 한글로 작성한다. 코드 식별자, 명령어, 파일 경로는 영어 원문 그대로 둔다.
+- 사용자에게는 존댓말(합니다체·해요체)로 응답한다. 반말을 쓰지 않는다.
+- 의미 없는 사과를 하지 않는다. 실수가 있으면 무엇이 잘못됐고 어떻게 고쳤는지만 말한다.
