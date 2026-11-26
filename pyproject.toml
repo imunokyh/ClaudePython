@@ -7,14 +7,27 @@ name = "child-lock"
 version = "0.1.0"
 description = "전자식 차일드락 제어 SW (PC/SIL 참조 구현)"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "fastapi==0.165.0",
+    "uvicorn==0.54.0",
+]
 
 [project.optional-dependencies]
 dev = [
+    "httpx==0.28.1",
+    "mypy==2.4.1",
     "pytest==8.4.2",
     "pytest-cov==7.0.0",
     "ruff==0.14.3",
 ]
+
+[tool.setuptools.package-data]
+child_lock = ["web/static/*"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+files = ["src"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -42,7 +55,16 @@ extend-exclude = [".claude"]
 [tool.ruff.lint]
 # E/W: pycodestyle, F: pyflakes, I: import 정렬, N: 명명 규칙(Google Python Style),
 # C90: 순환 복잡도, B: bugbear, UP: 최신 문법, SIM: 단순화
-select = ["E", "W", "F", "I", "N", "C90", "B", "UP", "SIM"]
+# BLE/S102/S307/PLW0603/F403: Python 부분집합 (SWE2-SAP SA-11)
+select = [
+    "E", "W", "F", "I", "N", "C90", "B", "UP", "SIM",
+    "BLE", "S102", "S307", "PLW0603", "F403",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# QM 호출 격리를 위한 포괄 예외 처리 (SWE2-ARC 2.4, SWE2-SAP 1.2)
+"src/child_lock/controller.py" = ["BLE001"]
+"src/child_lock/runtime/runner.py" = ["BLE001"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10

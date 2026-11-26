@@ -32,6 +32,11 @@ pipeline {
                 bat '%VENV_PY% -m ruff format --check .'
             }
         }
+        stage('타입 검사 (mypy strict)') {
+            steps {
+                bat '%VENV_PY% -m mypy'
+            }
+        }
         stage('단위 테스트 (Branch 커버리지 100%)') {
             steps {
                 bat 'if not exist reports mkdir reports'

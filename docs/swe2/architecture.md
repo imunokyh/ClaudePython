@@ -86,7 +86,7 @@ DR-1~DR-4, DR-8은 패키지 내부(`child_lock.*`) import에 대한 규칙이�
 | DR-3 | `types`는 패키지 내부 모듈을 import하지 않는다 |
 | DR-4 | `web.*`는 패키지 내부에서 `runtime.runner`, `runtime.clock`(앱 생성 시 `MonotonicClock`), `types`만 import한다 |
 | DR-5 | `runtime.*`을 뺀 모든 패키지 모듈은 아래 금지 목록을 import·호출하지 않는다: 모듈 `time`, `random`, `secrets`, `os`, `io`, `socket`, `pathlib`, `importlib`, `threading`, `subprocess`, `asyncio`(web 제외); 호출 `datetime.now`, `datetime.today`, `datetime.utcnow`, `open`, `__import__`, `exec`, `eval`, `compile`. `runtime.runner`는 `threading`만, `runtime.clock`은 `time`만 예외로 쓴다 |
-| DR-8 | `controller`는 패키지 내부에서 `types`, `safety.*`, `qm.rules`, `qm.event_log`만 import한다. `runtime.runner`는 `controller`, `runtime.clock`, `types`만 import한다 |
+| DR-8 | `controller`는 패키지 내부에서 `types`, `safety.*`, `qm.rules`, `qm.event_log`만 import한다. `runtime.runner`는 `controller`, `runtime.clock`, `types`, `qm.event_log`(기본 구성 생성과 이벤트 조회용)만 import한다 |
 
 **외부 import 허용 목록**
 
@@ -95,7 +95,7 @@ DR-1~DR-4, DR-8은 패키지 내부(`child_lock.*`) import에 대한 규칙이�
 | 전체 | `__future__`, `dataclasses`, `enum`, `typing`, `math`, `collections`, `types`(MappingProxyType), `itertools`, `functools` |
 | `qm.replay` | 위 + `hashlib`, `json` |
 | `runtime.*` | 위 + DR-5 예외 |
-| `web.*` | 위 + `fastapi`, `pydantic`, `starlette`, `json`, `logging`, `asyncio` |
+| `web.*` | 위 + `fastapi`, `pydantic`, `starlette`, `json`, `logging`, `asyncio`, `pathlib`(정적 파일 위치) |
 | DR-6 | `qm.*`, `web.*`는 다른 모듈 객체의 `_`로 시작하는 속성에 접근하지 않고, `setattr`, `object.__setattr__`, `__dict__`를 쓰지 않는다 |
 | DR-7 | `types`의 dataclass는 모두 `frozen=True`, `slots=True`이고 필드 타입은 불변 타입(`int`, `float`, `str`, `bool`, Enum, `tuple`, `frozenset`, 다른 불변 dataclass, `None`)만 쓴다 |
 
